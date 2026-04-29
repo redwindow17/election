@@ -1,0 +1,106 @@
+/* ============================================================
+   GuideResult Component Styles
+   ============================================================ */
+
+.guide-result {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.guide-result__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.guide-result__title {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.guide-result__advice {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background: rgba(99, 102, 241, 0.1);
+  border-left: 4px solid var(--color-primary-500);
+}
+
+.guide-result__advice-icon {
+  font-size: var(--font-size-2xl);
+  flex-shrink: 0;
+}
+
+.guide-result__steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  position: relative;
+}
+
+/* Vertical line connecting steps */
+.guide-result__steps::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 18px; /* Center of the 36px badge */
+  width: 2px;
+  background: var(--color-glass-border);
+  z-index: 0;
+}
+
+@media (max-width: 768px) {
+  .guide-result__steps::before {
+    left: var(--space-4); /* Adjust for smaller padding in StepCard on mobile */
+  }
+}
+
+.guide-result__extras {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-6);
+  margin-top: var(--space-4);
+}
+
+.guide-result__extra-section {
+  padding: var(--space-6);
+  background: var(--gradient-card);
+}
+
+.guide-result__extra-section h3 {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  margin-bottom: var(--space-4);
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.guide-result__extra-section ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.guide-result__extra-section li {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.guide-result__extra-section li::before {
+  content: '•';
+  color: var(--color-accent);
+  font-weight: bold;
+}

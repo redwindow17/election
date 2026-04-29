@@ -1,0 +1,72 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+coverage/
+**/dist/
+**/build/
+**/coverage/
+
+# Vite / TypeScript / tool caches
+.vite/
+.cache/
+.tmp/
+**/.vite/
+**/.cache/
+**/.tmp/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment files
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Google Cloud / Firebase credentials
+*service-account*.json
+*firebase-adminsdk*.json
+google-application-credentials*.json
+credentials.json
+
+# Firebase local files
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Test and runtime artifacts
+.nyc_output/
+tmp/
+temp/
+*.pid
+*.seed
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor directories and files
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

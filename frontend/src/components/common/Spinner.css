@@ -1,0 +1,65 @@
+/* ── Spinner / Ashoka Chakra Loader ── */
+
+.spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.spinner__ring {
+  position: relative;
+  animation: chakraSpin 2.5s linear infinite;
+}
+
+.spinner--sm .spinner__ring { width: 32px; height: 32px; }
+.spinner--md .spinner__ring { width: 56px; height: 56px; }
+.spinner--lg .spinner__ring { width: 80px; height: 80px; }
+
+.spinner__ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid var(--color-chakra-blue);
+  opacity: 0.15;
+}
+
+.spinner__ring::after {
+  content: '';
+  position: absolute;
+  inset: 15%;
+  border-radius: 50%;
+  background: var(--color-chakra-blue);
+  opacity: 0.2;
+}
+
+.spinner__spoke {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 40%;
+  transform-origin: center top;
+  background: linear-gradient(to bottom, var(--color-primary-400), transparent);
+  border-radius: 1px;
+  opacity: 0.6;
+}
+
+.spinner__spoke:nth-child(4n) {
+  background: linear-gradient(to bottom, var(--color-saffron), transparent);
+  opacity: 0.8;
+  width: 2.5px;
+}
+
+.spinner__spoke:nth-child(4n+2) {
+  background: linear-gradient(to bottom, var(--color-india-green), transparent);
+  opacity: 0.8;
+  width: 2.5px;
+}
+
+.spinner__label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  animation: pulse 2s ease-in-out infinite;
+}
