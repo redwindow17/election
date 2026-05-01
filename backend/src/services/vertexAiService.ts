@@ -13,8 +13,8 @@ function getVertexAI(): VertexAI {
   if (!vertexAI) {
     const config = getConfig();
     vertexAI = new VertexAI({
-      project: config.GOOGLE_CLOUD_PROJECT,
-      location: 'us-central1',
+      project: config.GOOGLE_CLOUD_PROJECT!,
+      location: config.VERTEX_AI_LOCATION,
     });
   }
   return vertexAI;
@@ -70,10 +70,17 @@ Please provide a personalized election guide response.`;
 export async function generateElectionGuide(
   input: ElectionQueryInput
 ): Promise<ElectionGuideResponse> {
+  const config = getConfig();
+
+  if (!config.GOOGLE_CLOUD_PROJECT) {
+    logger.warn('Vertex AI running in demo mode; GOOGLE_CLOUD_PROJECT is not configured');
+    return createDemoElectionGuide(input);
+  }
+
   const ai = getVertexAI();
 
   const model = ai.getGenerativeModel({
-    model: 'gemini-1.5-pro',
+    model: config.VERTEX_AI_MODEL,
     generationConfig: {
       temperature: 0.3,
       topP: 0.8,
@@ -119,6 +126,40 @@ export async function generateElectionGuide(
     return parsed;
   } catch (error) {
     logger.error('Vertex AI generation failed', { error });
-    throw new Error('Failed to generate election guide. Please try again.');
+    return createDemoElectionGuide(input);
   }
+}
+
+function createDemoElectionGuide(input: ElectionQueryInput): ElectionGuideResponse {
+  const registered = input.voterIdStatus === 'registered';
+  return {
+    personalizedAdvice: `Here is a practical election guide for a voter in ${input.state}. This demo-safe response is used when Vertex AI is not configured, while preserving the same structured workflow.`,
+    steps: [
+      {
+        stepNumber: 1,
+        title: registered ? 'Verify Your Electoral Roll Entry' : 'Register or Update Your Voter Details',
+        description: registered
+          ? 'Check that your name, address, and polling station details are current before election day.'
+          : 'Use the official Voter Services Portal to submit or update your voter registration information.',
+        requirements: ['Mobile number or email', 'EPIC number if available', 'Current address details'],
+        tips: ['Use official ECI portals and keep the acknowledgement number for follow-up.'],
+      },
+      {
+        stepNumber: 2,
+        title: 'Prepare Accepted Identification',
+        description: 'Keep an accepted original photo identity document ready for polling day.',
+        requirements: ['Voter ID or accepted photo ID', 'Polling booth details'],
+        tips: ['Carry the original document, not only a photo on your phone.'],
+      },
+      {
+        stepNumber: 3,
+        title: 'Plan Your Polling Day',
+        description: 'Find your polling station, choose a convenient time, and follow polling staff instructions.',
+        tips: ['Call 1950 or check official resources if your polling station is unclear.'],
+      },
+    ],
+    importantDates: ['Check official ECI announcements for your constituency schedule.'],
+    helplineNumbers: ['1950 - Voter Helpline'],
+    additionalResources: ['https://voters.eci.gov.in', 'https://eci.gov.in'],
+  };
 }

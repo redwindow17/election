@@ -2,6 +2,7 @@
 // Auth Context — Firebase Auth State Provider
 // ============================================================
 
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useEffect, useState, useCallback } from 'react';
 import {
   onAuthStateChanged,
@@ -13,6 +14,7 @@ import {
 } from 'firebase/auth';
 import type { Auth } from 'firebase/auth';
 import { auth, isFirebaseConfigured, setDemoCurrentUser } from '../config/firebase';
+import { trackClientEvent } from '../services/telemetryService';
 import type { AppUser } from '../types';
 
 interface AuthContextType {
@@ -62,20 +64,35 @@ function persistDemoUser(nextUser: AppUser | null) {
   }
 }
 
+function restoreDemoUser(): AppUser | null {
+  try {
+    const storedUser = localStorage.getItem('demoAuthUser');
+    if (!storedUser) return null;
+    const parsedUser = JSON.parse(storedUser) as AppUser;
+    setDemoCurrentUser({
+      ...parsedUser,
+      getIdToken: async () => '',
+    });
+    return parsedUser;
+  } catch {
+    localStorage.removeItem('demoAuthUser');
+    return null;
+  }
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AppUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<AppUser | null>(() =>
+    isFirebaseConfigured ? null : restoreDemoUser()
+  );
+  const [loading, setLoading] = useState(isFirebaseConfigured);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isFirebaseConfigured) {
-      const storedUser = localStorage.getItem('demoAuthUser');
-      if (storedUser) {
-        const parsedUser = JSON.parse(storedUser) as AppUser;
-        setUser(parsedUser);
-        persistDemoUser(parsedUser);
-      }
-      setLoading(false);
       return;
     }
 
@@ -98,8 +115,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         persistDemoUser(demoUser);
         setUser(demoUser);
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to sign in');
+      await trackClientEvent('login_email_client');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to sign in'));
       throw err;
     } finally {
       setLoading(false);
@@ -117,8 +135,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         persistDemoUser(demoUser);
         setUser(demoUser);
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to create account');
+      await trackClientEvent('signup_email_client');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to create account'));
       throw err;
     } finally {
       setLoading(false);
@@ -138,8 +157,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         persistDemoUser(demoUser);
         setUser(demoUser);
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to sign in with Google');
+      await trackClientEvent('login_google_client');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to sign in with Google'));
       throw err;
     } finally {
       setLoading(false);
@@ -154,8 +174,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         persistDemoUser(null);
         setUser(null);
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to sign out');
+      await trackClientEvent('logout_client');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to sign out'));
     }
   }, []);
 

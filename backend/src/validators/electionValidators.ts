@@ -49,3 +49,15 @@ export const ElectionQuerySchema = z.object({
 });
 
 export type ElectionQuerySchemaType = z.infer<typeof ElectionQuerySchema>;
+
+export const ConversationFeedbackSchema = z.object({
+  rating: z
+    .number({ required_error: 'Rating is required', invalid_type_error: 'Rating must be a number' })
+    .int('Rating must be a whole number')
+    .min(1, 'Rating must be at least 1')
+    .max(5, 'Rating must be at most 5'),
+  useful: z.boolean({ required_error: 'Usefulness is required' }),
+  comment: z.string().trim().max(500, 'Comment must be at most 500 characters').optional(),
+});
+
+export type ConversationFeedbackSchemaType = z.infer<typeof ConversationFeedbackSchema>;

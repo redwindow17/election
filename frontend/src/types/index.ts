@@ -30,6 +30,40 @@ export interface ElectionGuideResponse {
   conversationId?: string;
 }
 
+/** Export response for a saved guide */
+export interface ConversationExportResult {
+  provider: 'cloud-storage' | 'inline-demo';
+  conversationId: string;
+  storagePath?: string;
+  gcsUri?: string;
+  downloadUrl?: string;
+  inlineExport?: {
+    fileName: string;
+    contentType: 'application/json';
+    data: unknown;
+  };
+}
+
+/** Feedback payload for a saved guide */
+export interface ConversationFeedbackInput {
+  rating: number;
+  useful: boolean;
+  comment?: string;
+}
+
+/** Saved feedback returned by the API */
+export interface ConversationFeedback extends ConversationFeedbackInput {
+  createdAt?: string;
+}
+
+/** Aggregate usage metrics for the current deployment */
+export interface ElectionInsights {
+  guideCreated: number;
+  exportCreated: number;
+  feedbackSubmitted: number;
+  source: 'bigquery' | 'firestore' | 'demo';
+}
+
 /** API response envelope */
 export interface ApiResponse<T = unknown> {
   success: boolean;
@@ -45,6 +79,8 @@ export interface ConversationHistoryItem {
   query: ElectionQueryInput;
   response: ElectionGuideResponse;
   createdAt: string;
+  exportCount?: number;
+  lastFeedback?: ConversationFeedback;
 }
 
 /** Firebase user */

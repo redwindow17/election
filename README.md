@@ -1,123 +1,83 @@
-# 🇮🇳 AI Election Guide – India
+# AI Election Guide - India
 
-A production-ready, full-stack AI-powered web application that helps Indian citizens understand the election process with personalized guidance powered by Google Vertex AI (Gemini).
+A production-ready full-stack civic guidance app for Indian voters. The app combines a React/Vite frontend, an Express/TypeScript backend, Firebase Auth, Firestore, Vertex AI, Cloud Storage exports, BigQuery analytics, Firebase Hosting, Firebase App Check, Firebase Analytics, Performance Monitoring, and Firebase Cloud Functions.
 
----
+## Google Services
 
-## 🚀 Tech Stack
+| Workflow | Google service |
+| --- | --- |
+| Google sign-in and protected sessions | Firebase Authentication |
+| User guide history and feedback | Cloud Firestore |
+| Personalized election guidance | Vertex AI with Gemini |
+| Private guide export files | Cloud Storage signed URLs |
+| Sanitized usage metrics | BigQuery |
+| Conversation analytics and daily rollups | Firebase Cloud Functions |
+| Static frontend deployment | Firebase Hosting |
+| Client analytics and load/performance traces | Firebase Analytics + Performance Monitoring |
+| API abuse hardening | Firebase App Check |
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 18 + TypeScript + Vite |
-| Backend | Node.js + Express + TypeScript |
-| AI | Google Vertex AI (Gemini 1.5 Pro) |
-| Auth | Firebase Authentication |
-| Database | Cloud Firestore |
-| Hosting | Firebase Hosting |
-| Validation | Zod |
-| Security | Helmet, Rate-limiting, CORS |
-| Testing | Jest + React Testing Library |
+The app is demo-safe: if Google credentials are not configured, it falls back to local demo auth, in-memory history, inline JSON exports, and demo analytics counts.
 
----
+## Project Structure
 
-## 📁 Project Structure
-
-```
+```text
 election/
-├── frontend/          # React + TypeScript SPA
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── hooks/
-│   │   ├── services/
-│   │   ├── types/
-│   │   └── utils/
-│   └── ...
-├── backend/           # Express + TypeScript API
-│   ├── src/
-│   │   ├── controllers/
-│   │   ├── middleware/
-│   │   ├── routes/
-│   │   ├── services/
-│   │   └── validators/
-│   └── ...
-├── config/            # Environment configs
-├── tests/             # Unit + integration tests
-└── .github/workflows/ # CI/CD pipeline
+  backend/      Express + TypeScript API
+  frontend/     React + TypeScript + Vite SPA
+  functions/    Firebase Cloud Functions analytics workers
+  firebase.json Root Firebase Hosting/Firestore/Functions config
 ```
 
----
-
-## ⚙️ Setup
-
-### Prerequisites
-- Node.js 18+
-- Firebase project with Firestore + Auth enabled
-- Google Cloud project with Vertex AI enabled
-
-### Environment Variables
-
-**Backend (`backend/.env`):**
-```
-GOOGLE_CLOUD_PROJECT=your-project-id
-GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account.json
-FIREBASE_PROJECT_ID=your-firebase-project-id
-PORT=4000
-ALLOWED_ORIGINS=http://localhost:5173
-```
-
-**Frontend (`frontend/.env`):**
-```
-VITE_API_BASE_URL=http://localhost:4000
-VITE_FIREBASE_API_KEY=...
-VITE_FIREBASE_AUTH_DOMAIN=...
-VITE_FIREBASE_PROJECT_ID=...
-VITE_FIREBASE_APP_ID=...
-```
-
-### Installation
+## Backend Setup
 
 ```bash
-# Install backend
-cd backend && npm install
-
-# Install frontend
-cd ../frontend && npm install
-
-# Start backend (dev)
-cd ../backend && npm run dev
-
-# Start frontend (dev)
-cd ../frontend && npm run dev
+cd backend
+npm install
+npm run build
+npm test
+npm run dev
 ```
 
----
+Important backend environment variables are documented in `backend/.env.example`, including optional `GCS_EXPORT_BUCKET`, `BIGQUERY_DATASET`, `BIGQUERY_EVENTS_TABLE`, `BIGQUERY_ROLLUPS_TABLE`, `GCS_SIGNED_URL_TTL_MINUTES`, `ANALYTICS_SALT`, and `FIREBASE_APPCHECK_REQUIRED`.
 
-## 🔒 Security Features
-
-- ✅ All API keys server-side only
-- ✅ Helmet.js security headers
-- ✅ Rate limiting (50 req/15min per IP)
-- ✅ Zod input validation
-- ✅ Prompt injection sanitization
-- ✅ Firebase Auth JWT verification
-- ✅ Firestore per-user rules
-- ✅ CORS whitelist
-
----
-
-## 🧪 Testing
+## Frontend Setup
 
 ```bash
-cd backend && npm test
-cd frontend && npm test
+cd frontend
+npm install
+npm run build
+npm test
+npm run dev
 ```
 
----
+Frontend Firebase variables are documented in `frontend/.env.example`, including the App Check site key, Storage bucket, and Analytics measurement ID.
 
-## 🚢 Deploy
+## API Highlights
+
+- `POST /api/election/guide` generates a Vertex AI guide, saves it to Firestore or demo memory, and records sanitized telemetry.
+- `GET /api/election/history` returns user-scoped guide history.
+- `POST /api/election/conversations/:id/export` exports a guide to Cloud Storage or returns an inline demo export.
+- `POST /api/election/conversations/:id/feedback` saves per-guide feedback and records sanitized analytics.
+- `GET /api/election/insights` returns aggregate counts from BigQuery, Firestore, or demo memory.
+- `GET /api/health/google-services` reports enabled/demo status without exposing secrets.
+
+## Deployment
+
+Build the frontend before deploying Firebase Hosting:
 
 ```bash
-cd frontend && npm run build
+cd frontend
+npm run build
+cd ..
 firebase deploy
+```
+
+Deploy Functions after installing function dependencies:
+
+```bash
+cd functions
+npm install
+npm run build
+cd ..
+firebase deploy --only functions
 ```

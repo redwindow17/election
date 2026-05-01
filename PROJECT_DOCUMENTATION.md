@@ -13,6 +13,11 @@ Google Services power the production architecture of the system:
 - **Firebase Authentication** secures user login.
 - **Cloud Firestore** stores user-specific guide history and structured civic data.
 - **Vertex AI with Gemini** provides intelligent, contextual election assistance.
+- **Cloud Storage** stores private guide exports and returns short-lived signed URLs.
+- **BigQuery** stores sanitized analytics events for guide generation, exports, and feedback.
+- **Firebase Cloud Functions** records conversation-created analytics and scheduled rollups.
+- **Firebase Analytics and Performance Monitoring** capture client-side usage and response timing.
+- **Firebase App Check** can protect backend workflows from unauthenticated client abuse.
 - **Firebase Hosting** enables fast and scalable frontend deployment.
 - **Google Cloud infrastructure** supports secure, production-ready backend deployment.
 
@@ -205,10 +210,26 @@ Google Services are not optional add-ons in this architecture; they are core inf
 - Firebase Authentication secures identity.
 - Firestore provides scalable data storage.
 - Vertex AI provides intelligence.
+- Cloud Storage provides private guide exports.
+- BigQuery provides sanitized analytics and reporting.
+- Firebase Cloud Functions provide serverless event handling and scheduled rollups.
+- Firebase Analytics and Performance Monitoring support client observability.
+- Firebase App Check adds optional request integrity protection.
 - Firebase Hosting delivers the frontend.
 - Google Cloud provides production deployment options.
 
 This stack was chosen because Google Services provide strong integration, scalability, security, and developer velocity.
+
+### Current Upgrade Coverage
+
+The latest implementation adds broader Google-service adoption across real user workflows:
+
+- Guide creation writes history and sanitized `guide_created` events.
+- Guide export writes private Cloud Storage objects when configured, otherwise returns an inline demo export.
+- Feedback is stored per conversation and tracked as sanitized analytics.
+- Insights read from BigQuery first, then Firestore or demo memory.
+- Firebase Cloud Functions mirror conversation-created analytics and create scheduled daily rollups.
+- Client Analytics, Performance, and App Check are lazy-loaded so page load remains efficient.
 
 ## 7. Google Services Integration
 

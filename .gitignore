@@ -10,6 +10,7 @@ coverage/
 **/dist/
 **/build/
 **/coverage/
+functions/lib/
 
 # Vite / TypeScript / tool caches
 .vite/

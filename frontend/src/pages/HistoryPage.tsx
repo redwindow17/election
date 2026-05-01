@@ -2,32 +2,93 @@
 // HistoryPage Component
 // ============================================================
 
-import { useEffect, useState } from 'react';
-import type { ConversationHistoryItem } from '../types';
-import { fetchConversationHistory } from '../services/apiService';
+import { useCallback, useEffect, useState } from 'react';
+import type { ConversationHistoryItem, ElectionInsights } from '../types';
+import {
+  exportConversation,
+  fetchConversationHistory,
+  fetchElectionInsights,
+  submitConversationFeedback,
+} from '../services/apiService';
 import { Spinner } from '../components/common/Spinner';
 import { Button } from '../components/common/Button';
 import './HistoryPage.css';
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export function HistoryPage() {
   const [history, setHistory] = useState<ConversationHistoryItem[]>([]);
+  const [insights, setInsights] = useState<ElectionInsights | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exportingId, setExportingId] = useState<string | null>(null);
+  const [feedbackId, setFeedbackId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadHistory();
-  }, []);
-
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await fetchConversationHistory(10);
-      setHistory(data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load history');
+      const [historyData, insightsData] = await Promise.all([
+        fetchConversationHistory(10),
+        fetchElectionInsights().catch(() => null),
+      ]);
+      setHistory(historyData);
+      setInsights(insightsData);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to load history'));
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadHistory();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [loadHistory]);
+
+  const handleExport = async (conversationId: string) => {
+    try {
+      setExportingId(conversationId);
+      const result = await exportConversation(conversationId);
+      if (result.downloadUrl) {
+        window.open(result.downloadUrl, '_blank', 'noopener,noreferrer');
+      }
+      if (result.inlineExport) {
+        const blob = new Blob([JSON.stringify(result.inlineExport.data, null, 2)], {
+          type: result.inlineExport.contentType,
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = result.inlineExport.fileName;
+        link.click();
+        URL.revokeObjectURL(url);
+      }
+      await loadHistory();
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to export guide'));
+    } finally {
+      setExportingId(null);
+    }
+  };
+
+  const handleQuickFeedback = async (conversationId: string) => {
+    try {
+      setFeedbackId(conversationId);
+      await submitConversationFeedback(conversationId, {
+        rating: 5,
+        useful: true,
+        comment: 'Marked useful from history',
+      });
+      await loadHistory();
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to save feedback'));
+    } finally {
+      setFeedbackId(null);
     }
   };
 
@@ -58,9 +119,26 @@ export function HistoryPage() {
         <p className="history-page__subtitle">Review your past queries and election guides.</p>
       </div>
 
+      {insights && (
+        <div className="history-page__insights" aria-label="Usage insights">
+          <div className="history-page__metric">
+            <span>{insights.guideCreated}</span>
+            <strong>Guides</strong>
+          </div>
+          <div className="history-page__metric">
+            <span>{insights.exportCreated}</span>
+            <strong>Exports</strong>
+          </div>
+          <div className="history-page__metric">
+            <span>{insights.feedbackSubmitted}</span>
+            <strong>Feedback</strong>
+          </div>
+        </div>
+      )}
+
       {history.length === 0 ? (
         <div className="history-page__empty glass-card">
-          <div className="history-page__empty-icon">📂</div>
+          <div className="history-page__empty-icon">Folder</div>
           <h2>No history found</h2>
           <p>You haven't generated any election guides yet.</p>
         </div>
@@ -77,10 +155,31 @@ export function HistoryPage() {
               <div className="history-page__card-details">
                 <span className="history-badge">Age: {item.query.age}</span>
                 <span className="history-badge">{item.query.state}</span>
+                <span className="history-badge">Exports: {item.exportCount ?? 0}</span>
+                {item.lastFeedback && <span className="history-badge">Rated {item.lastFeedback.rating}/5</span>}
               </div>
               <p className="history-page__card-preview">
                 {item.response.personalizedAdvice.substring(0, 150)}...
               </p>
+              <div className="history-page__card-actions">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleExport(item.id)}
+                  loading={exportingId === item.id}
+                >
+                  Export
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleQuickFeedback(item.id)}
+                  loading={feedbackId === item.id}
+                  disabled={Boolean(item.lastFeedback)}
+                >
+                  {item.lastFeedback ? 'Feedback Saved' : 'Mark Useful'}
+                </Button>
+              </div>
             </div>
           ))}
         </div>

@@ -4,16 +4,47 @@
 
 import { z } from 'zod';
 
+const optionalGoogleValue = z
+  .string()
+  .optional()
+  .transform((value) => {
+    if (!value || value === '...' || value.startsWith('your-')) return undefined;
+    return value;
+  });
+
+const booleanFlag = (defaultValue: boolean) =>
+  z
+    .string()
+    .optional()
+    .transform((value) => {
+      if (value === undefined) return defaultValue;
+      return ['1', 'true', 'yes', 'on'].includes(value.toLowerCase());
+    });
+
 const envSchema = z.object({
   PORT: z.string().default('4000').transform(Number),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 
   // Google Cloud / Vertex AI
-  GOOGLE_CLOUD_PROJECT: z.string().min(1, 'GOOGLE_CLOUD_PROJECT is required'),
-  GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
+  GOOGLE_CLOUD_PROJECT: optionalGoogleValue,
+  GOOGLE_APPLICATION_CREDENTIALS: optionalGoogleValue,
+  VERTEX_AI_LOCATION: z.string().default('us-central1'),
+  VERTEX_AI_MODEL: z.string().default('gemini-1.5-pro'),
 
   // Firebase
-  FIREBASE_PROJECT_ID: z.string().min(1, 'FIREBASE_PROJECT_ID is required'),
+  FIREBASE_PROJECT_ID: optionalGoogleValue,
+  FIREBASE_APPCHECK_REQUIRED: booleanFlag(false),
+  DEMO_AUTH_ENABLED: booleanFlag(process.env.NODE_ENV !== 'production'),
+
+  // Cloud Storage exports
+  GCS_EXPORT_BUCKET: optionalGoogleValue,
+  GCS_SIGNED_URL_TTL_MINUTES: z.string().default('15').transform(Number),
+
+  // BigQuery analytics
+  BIGQUERY_DATASET: optionalGoogleValue,
+  BIGQUERY_EVENTS_TABLE: optionalGoogleValue.default('election_events'),
+  BIGQUERY_ROLLUPS_TABLE: optionalGoogleValue.default('daily_rollups'),
+  ANALYTICS_SALT: z.string().default('demo-analytics-salt'),
 
   // CORS
   ALLOWED_ORIGINS: z.string().default('http://localhost:5173'),
@@ -52,4 +83,8 @@ export function getConfig(): EnvConfig {
     throw new Error('Config not initialized. Call validateEnv() first.');
   }
   return cachedConfig;
+}
+
+export function hasGoogleProject(config = getConfig()): boolean {
+  return Boolean(config.GOOGLE_CLOUD_PROJECT || config.FIREBASE_PROJECT_ID);
 }

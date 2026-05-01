@@ -5,6 +5,7 @@
 import { useState, useCallback } from 'react';
 import type { ElectionQueryInput, ElectionGuideResponse } from '../types';
 import { fetchElectionGuide } from '../services/apiService';
+import { measureAsync } from '../services/telemetryService';
 
 interface UseElectionGuideReturn {
   result: ElectionGuideResponse | null;
@@ -61,9 +62,9 @@ export function useElectionGuide(): UseElectionGuideReturn {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetchElectionGuide(input);
+      const response = await measureAsync('generate_election_guide', () => fetchElectionGuide(input));
       setResult(response);
-    } catch (err: any) {
+    } catch {
       setResult(createFallbackGuide(input));
       setError(null);
     } finally {

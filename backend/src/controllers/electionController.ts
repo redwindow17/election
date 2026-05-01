@@ -1,26 +1,44 @@
 // ============================================================
-// Election Controller — Request → Service → Response
+// Election Controller - Request -> Google-backed services -> Response
 // ============================================================
 
 import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../types';
-import { ElectionQuerySchema } from '../validators/electionValidators';
+import { ConversationFeedbackSchema, ElectionQuerySchema } from '../validators/electionValidators';
 import { sanitizePrompt } from '../utils/promptSanitizer';
 import { generateElectionGuide } from '../services/vertexAiService';
-import { saveConversation, getConversationHistory } from '../services/firestoreService';
+import {
+  getConversation,
+  getConversationHistory,
+  incrementConversationExportCount,
+  saveConversation,
+  saveConversationFeedback,
+} from '../services/firestoreService';
+import { exportConversationToStorage } from '../services/storageService';
+import {
+  getElectionInsights,
+  trackExportCreated,
+  trackFeedbackSubmitted,
+  trackGuideCreated,
+} from '../services/analyticsService';
 import logger from '../utils/logger';
 
-/**
- * POST /api/election/guide
- * Validate input → sanitize prompt → call Vertex AI → save to Firestore → return JSON
- */
+function getUserId(req: AuthenticatedRequest): string | null {
+  return req.user?.uid ?? null;
+}
+
 export async function getGuide(
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    // 1. Validate input
+    const userId = getUserId(req);
+    if (!userId) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
+
     const parseResult = ElectionQuerySchema.safeParse(req.body);
     if (!parseResult.success) {
       const errors = parseResult.error.issues.map((i) => ({
@@ -32,8 +50,6 @@ export async function getGuide(
     }
 
     const input = parseResult.data;
-
-    // 2. Sanitize the question for prompt injection
     const { sanitized, isSuspicious } = sanitizePrompt(input.question);
     if (isSuspicious) {
       res.status(400).json({
@@ -43,24 +59,17 @@ export async function getGuide(
       return;
     }
 
-    // Use sanitized question
     const sanitizedInput = { ...input, question: sanitized };
 
-    // 3. Generate AI response
     logger.info('Generating election guide', {
-      userId: req.user?.uid,
+      userId,
       state: input.state,
     });
 
     const guideResponse = await generateElectionGuide(sanitizedInput);
+    const conversationId = await saveConversation(userId, sanitizedInput, guideResponse);
+    await trackGuideCreated(userId, sanitizedInput, conversationId);
 
-    // 4. Save to Firestore
-    let conversationId: string | undefined;
-    if (req.user?.uid) {
-      conversationId = await saveConversation(req.user.uid, sanitizedInput, guideResponse);
-    }
-
-    // 5. Return response
     res.status(200).json({
       success: true,
       data: {
@@ -73,27 +82,113 @@ export async function getGuide(
   }
 }
 
-/**
- * GET /api/election/history
- * Return the user's past AI conversations.
- */
 export async function getHistory(
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    if (!req.user?.uid) {
+    const userId = getUserId(req);
+    if (!userId) {
       res.status(401).json({ success: false, error: 'User not authenticated' });
       return;
     }
 
     const limit = Math.min(parseInt(req.query.limit as string) || 20, 50);
-    const history = await getConversationHistory(req.user.uid, limit);
+    const history = await getConversationHistory(userId, limit);
 
     res.status(200).json({
       success: true,
       data: history,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function exportConversation(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const userId = getUserId(req);
+    if (!userId) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
+
+    const conversationId = req.params.id;
+    const conversation = await getConversation(userId, conversationId);
+    if (!conversation) {
+      res.status(404).json({ success: false, error: 'Conversation not found' });
+      return;
+    }
+
+    const exportResult = await exportConversationToStorage(userId, conversation);
+    await incrementConversationExportCount(userId, conversationId);
+    await trackExportCreated(userId, conversation, exportResult.provider);
+
+    res.status(200).json({
+      success: true,
+      data: exportResult,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function submitFeedback(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const userId = getUserId(req);
+    if (!userId) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
+
+    const parseResult = ConversationFeedbackSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      const errors = parseResult.error.issues.map((i) => ({
+        field: i.path.join('.'),
+        message: i.message,
+      }));
+      res.status(400).json({ success: false, error: 'Validation failed', details: errors });
+      return;
+    }
+
+    const conversationId = req.params.id;
+    const conversation = await getConversation(userId, conversationId);
+    if (!conversation) {
+      res.status(404).json({ success: false, error: 'Conversation not found' });
+      return;
+    }
+
+    const feedback = await saveConversationFeedback(userId, conversationId, parseResult.data);
+    await trackFeedbackSubmitted(userId, conversation, feedback);
+
+    res.status(200).json({
+      success: true,
+      data: feedback,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getInsights(
+  _req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const insights = await getElectionInsights();
+    res.status(200).json({
+      success: true,
+      data: insights,
     });
   } catch (error) {
     next(error);
