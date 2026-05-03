@@ -40,6 +40,21 @@ npm run dev
 
 Important backend environment variables are documented in `backend/.env.example`, including optional `GCS_EXPORT_BUCKET`, `BIGQUERY_DATASET`, `BIGQUERY_EVENTS_TABLE`, `BIGQUERY_ROLLUPS_TABLE`, `GCS_SIGNED_URL_TTL_MINUTES`, `ANALYTICS_SALT`, and `FIREBASE_APPCHECK_REQUIRED`.
 
+### Backend Testing
+
+Comprehensive test coverage includes:
+
+- **Integration Tests** (`electionController.test.ts`): Validates guide generation, history, exports, feedback, and health checks
+- **Middleware Tests**: Auth middleware and error handler validation
+- **Validator Tests** (`electionValidators.test.ts`): Age (18-120), state enum (36 states/UTs), question length (5-500 chars), feedback ratings (1-5)
+- **Utility Tests**: Hash determinism/uniqueness, prompt injection detection, sanitization
+
+Run tests with coverage:
+```bash
+npm test
+npm run test:coverage
+```
+
 ## Frontend Setup
 
 ```bash
@@ -51,6 +66,22 @@ npm run dev
 ```
 
 Frontend Firebase variables are documented in `frontend/.env.example`, including the App Check site key, Storage bucket, and Analytics measurement ID.
+
+### Frontend Testing
+
+Comprehensive test coverage includes:
+
+- **Page Tests**: GuidePage, HistoryPage, HomePage, NotFoundPage — form rendering, data loading, error states
+- **Component Tests**: GuideResult (export, feedback, rating buttons), Footer
+- **Hook Tests**: useAuth context validation, useElectionGuide guide generation and error fallback
+- **Service Tests** (`apiService.test.ts`): All API endpoints with success/error paths
+- **Utils Tests**: Constants validation (36 states/UTs, language options, sample questions)
+
+Run tests with coverage:
+```bash
+npm test
+npm run test:coverage
+```
 
 ## API Highlights
 

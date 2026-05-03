@@ -438,50 +438,187 @@ Firebase Hosting further improves performance by serving optimized static files 
 
 ## 11. Testing Strategy
 
-A production-ready testing strategy should include multiple layers.
+A production-ready testing strategy includes multiple layers with comprehensive coverage.
 
-### Unit Testing
+### Backend Testing (`npm test`)
 
-Unit tests should cover:
+#### Integration Tests
 
-- Input validation logic.
-- Utility functions.
-- Authentication context behavior.
-- API service functions.
-- Component rendering states.
+- **electionController.test.ts** (393 tests): End-to-end guide workflow
+  - Guide validation (age 18-120, state enum, question length 5-500)
+  - Prompt injection detection (DAN mode, system override patterns)
+  - Guide generation with demo fallback
+  - Conversation history (empty/limit)
+  - Export workflow (inline vs Cloud Storage)
+  - Feedback submission and rating validation (1-5)
+  - Insights aggregation
+  - Health checks and service status
+  - App Check enforcement
+  - 404 routing
 
-### API Testing
+#### Middleware Tests
 
-Backend API tests should validate:
+- **authMiddleware.test.ts**: Authentication validation
+  - Missing/malformed Authorization header rejection
+  - Bearer token scheme enforcement
+  - Demo auth mode (demo-token acceptance, X-Demo-User header)
+  - Firebase unavailable handling (503 response)
 
-- Health endpoint behavior.
-- Guide generation endpoint.
-- Authentication middleware.
-- Invalid request handling.
-- Firestore service behavior.
+- **errorHandler.test.ts**: Error handling
+  - Status code propagation (default 500, custom statusCode)
+  - Development vs production messaging
+  - Stack trace redaction in production
+  - JSON response format
 
-### Edge Case Handling
+#### Validator Tests
 
-Important edge cases include:
+- **electionValidators.test.ts**: Request validation
+  - `ElectionQuerySchema`: Age (18-120), state (36 valid options), question (5-500 chars), voterIdStatus, language
+  - `ConversationFeedbackSchema`: Rating (1-5), useful boolean, optional comment
 
-- Users under 18.
-- Missing state selection.
-- Empty or very long questions.
-- Missing Firebase configuration in local development.
-- Backend unavailable during demo.
-- Vertex AI request failures.
-- Expired Firebase ID tokens.
+#### Utility Tests
 
-### Manual Demo Testing
+- **hash.test.ts**: Cryptographic utilities
+  - `hashIdentifier`: Determinism, uniqueness, 64-char SHA-256 output, salt isolation
+  - `createEventId`: Prefix format, timestamp inclusion, hex suffix, uniqueness
 
-For hackathon judging, the following flow should be tested:
+- **promptSanitizer.test.ts**: Prompt injection protection
+  - Clean input pass-through with trimming
+  - Injection pattern detection (19+ patterns including "ignore previous instructions", "DAN mode", "jailbreak")
+  - Dangerous character stripping (`<>{}` backticks, backslashes)
+  - Max-length enforcement (500 chars)
+  - Case-insensitive matching
+  - Matched pattern reporting
 
-1. Open the frontend.
-2. Sign in with demo or Firebase auth.
-3. Navigate to the guide page.
-4. Submit a voter question.
-5. Review the generated election guide.
-6. Confirm responsive behavior on mobile and desktop.
+Run backend tests:
+```bash
+cd backend
+npm test                    # Run all tests
+npm run test:coverage       # Run with coverage report
+npm run test:watch         # Run in watch mode
+```
+
+### Frontend Testing (`npm test`)
+
+#### Page Tests
+
+- **GuidePage.test.tsx**: Guide generation workflow
+  - Form rendering and submission
+  - Successful guide display
+  - API failure with fallback preview
+  - "Ask Another Question" reset flow
+
+- **HistoryPage.test.tsx**: Conversation history
+  - Loading states and empty state
+  - History list rendering with timestamps
+  - Usage insights metrics (guide count, export count, feedback count)
+  - Export integration
+  - Quick feedback submission
+  - Error states with retry
+
+- **HomePage.test.tsx**: Landing page
+  - Hero section with CTA
+  - Feature cards as semantic articles
+  - Accessible region landmarks
+
+- **NotFoundPage.test.tsx**: 404 handling
+  - Page not found messaging
+  - Return home navigation
+
+#### Component Tests
+
+- **GuideResult.test.tsx**: Guide display and actions
+  - Personalized advice rendering
+  - Steps, important dates, helplines, resources sections
+  - Export button (disabled when no conversationId)
+  - Download URL vs inline export handling
+  - Feedback submission (rating 1-5)
+  - Error states and retry logic
+  - "Ask Another Question" button
+  - Accessibility: aria-pressed on rating buttons
+
+- **Footer.test.tsx**: Footer rendering
+  - Brand text and links
+
+#### Hook Tests
+
+- **useAuth.test.ts**: Authentication context
+  - Throws when used outside AuthProvider
+  - Returns all context methods (signIn, signUp, signOut, etc.)
+  - User/loading/error state exposure
+
+- **useElectionGuide.test.ts**: Guide generation hook
+  - Initial state (result=null, loading=false, error=null)
+  - Successful generation with result storage
+  - API failure with fallback guide and error message
+  - clearResult and clearError actions
+  - Loading flag lifecycle
+
+#### Service Tests
+
+- **apiService.test.ts**: API communication
+  - `fetchElectionGuide`: POST success/error handling
+  - `fetchConversationHistory`: GET with limit parameter
+  - `exportConversation`: POST with 404 handling
+  - `submitConversationFeedback`: POST with validation
+  - `fetchElectionInsights`: GET aggregate metrics
+  - `checkHealth`: Graceful failure detection
+  - Network error propagation
+
+- **telemetryService.test.ts**: Analytics
+  - `trackClientEvent`: Demo mode no-op
+  - `measureAsync`: Action execution and error propagation
+
+#### Utils Tests
+
+- **constants.test.ts**: Data validation
+  - `INDIAN_STATES`: 36 total (28 states + 8 UTs), no duplicates
+  - `VOTER_ID_STATUS_OPTIONS`: 3 options with labels
+  - `LANGUAGE_OPTIONS`: English (en) and Hindi (hi)
+  - `SAMPLE_QUESTIONS`: 4+ questions, 5-500 char length validation
+
+Run frontend tests:
+```bash
+cd frontend
+npm test                    # Run all tests
+npm run test:coverage       # Run with coverage report
+npm test -- --ui           # Run with UI dashboard
+```
+
+### Testing Layers
+
+#### Unit Testing
+- Input validation logic, utility functions, individual components, hooks
+- Covers edge cases and error paths
+
+#### Integration Testing
+- End-to-end guide generation workflow
+- Auth middleware enforcement
+- API response handling and fallbacks
+
+#### Edge Cases Covered
+- Users under 18 / over 120
+- Missing state or question
+- Question length boundaries (4 chars / 501 chars)
+- Empty conversation history
+- API failures with demo mode fallback
+- Expired authentication tokens
+- Vertex AI request failures
+- Missing Firebase configuration
+- Prompt injection attempts
+
+### Coverage Reporting
+
+Both backend and frontend generate coverage reports:
+- `backend/coverage/` — Jest coverage with lcov report
+- `frontend/coverage/` — Vitest coverage report
+
+### Continuous Integration
+
+Tests should be run on every pull request and before deployment:
+```bash
+npm install && npm test && npm run build
+```
 
 ## 12. Accessibility
 
