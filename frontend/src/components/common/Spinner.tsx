@@ -11,8 +11,14 @@ interface SpinnerProps {
 
 export function Spinner({ size = 'md', label = 'Loading...' }: SpinnerProps) {
   return (
-    <div className={`spinner spinner--${size}`} role="status" aria-label={label}>
-      <div className="spinner__ring">
+    <div
+      className={`spinner spinner--${size}`}
+      role="status"
+      aria-label={label}
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div className="spinner__ring" aria-hidden="true">
         {/* 24 spokes like the Ashoka Chakra */}
         {Array.from({ length: 24 }).map((_, i) => (
           <div

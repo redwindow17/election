@@ -34,6 +34,7 @@ export function Input({
         className="input-group__input"
         aria-invalid={!!error}
         aria-describedby={error ? errorId : helpText ? helpId : undefined}
+        aria-required={props.required}
         {...props}
       />
       {error && (

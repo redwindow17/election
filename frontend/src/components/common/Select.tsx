@@ -45,9 +45,10 @@ export function Select({
           className="select-group__select"
           aria-invalid={!!error}
           aria-describedby={error ? errorId : undefined}
+          aria-required={props.required}
           {...props}
         >
-          <option value="" disabled>
+          <option value="" disabled aria-label={placeholder}>
             {placeholder}
           </option>
           {normalizedOptions.map((opt) => (

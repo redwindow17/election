@@ -3,10 +3,15 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   roots: ['<rootDir>/src'],
-  testMatch: ['**/*.test.ts'],
-  collectCoverageFrom: ['src/**/*.ts', '!src/index.ts'],
+  // Discover tests both co-located (*.test.ts) and in __tests__ / test directories
+  testMatch: ['**/*.test.ts', '**/__tests__/**/*.ts', '**/test/**/*.test.ts'],
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/index.ts',
+    '!src/**/*.d.ts',
+  ],
   coverageDirectory: 'coverage',
   coverageThreshold: {
-    global: { lines: 55, functions: 55 },
+    global: { lines: 80, functions: 80, branches: 70, statements: 80 },
   },
 };

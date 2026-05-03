@@ -99,7 +99,7 @@ export function GuideResult({ result, onReset }: GuideResultProps) {
       )}
 
       {exportError && (
-        <div className="guide-result__notice" role="alert">
+        <div className="guide-result__notice" role="alert" aria-live="assertive">
           {exportError}
         </div>
       )}
@@ -116,7 +116,7 @@ export function GuideResult({ result, onReset }: GuideResultProps) {
       </div>
 
       {(result.importantDates || result.helplineNumbers || result.additionalResources) && (
-        <div className="guide-result__extras">
+        <section className="guide-result__extras" aria-label="Additional information">
           {result.importantDates && result.importantDates.length > 0 && (
             <div className="guide-result__extra-section glass-card delay-3">
               <h3>Important Dates</h3>
@@ -149,7 +149,7 @@ export function GuideResult({ result, onReset }: GuideResultProps) {
               </ul>
             </div>
           )}
-        </div>
+        </section>
       )}
 
       <div className="guide-result__feedback glass-card">
@@ -157,7 +157,8 @@ export function GuideResult({ result, onReset }: GuideResultProps) {
           <h3>Was this guide useful?</h3>
           <p>Help improve future election guidance.</p>
         </div>
-        <div className="guide-result__rating" aria-label="Rating">
+        <fieldset className="guide-result__rating" aria-label="Rate this guide">
+          <legend className="sr-only">Rating (1 to 5 stars)</legend>
           {[1, 2, 3, 4, 5].map((value) => (
             <button
               key={value}
@@ -165,24 +166,32 @@ export function GuideResult({ result, onReset }: GuideResultProps) {
               className={value <= rating ? 'guide-result__rating-btn guide-result__rating-btn--active' : 'guide-result__rating-btn'}
               onClick={() => setRating(value)}
               aria-label={`${value} out of 5`}
+              aria-pressed={value === rating}
             >
               {value}
             </button>
           ))}
-        </div>
+        </fieldset>
         <label className="guide-result__useful">
           <input type="checkbox" checked={useful} onChange={(event) => setUseful(event.target.checked)} />
           <span>Useful for my next step</span>
         </label>
+        <label htmlFor="guide-feedback-comment" className="sr-only">Optional comment</label>
         <textarea
+          id="guide-feedback-comment"
           className="guide-result__feedback-text"
           value={comment}
           onChange={(event) => setComment(event.target.value)}
           placeholder="Optional note"
           maxLength={500}
           rows={3}
+          aria-label="Optional comment"
         />
-        {feedbackError && <p className="guide-result__notice" role="alert">{feedbackError}</p>}
+        {feedbackError && (
+          <p className="guide-result__notice" role="alert" aria-live="assertive">
+            {feedbackError}
+          </p>
+        )}
         <Button
           variant="primary"
           size="sm"

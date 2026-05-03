@@ -137,6 +137,14 @@
   transform: translateY(-1px);
 }
 
+.guide-form__sample-chip:focus-visible {
+  outline: 2px solid var(--color-primary-400);
+  outline-offset: 2px;
+  background: rgba(249, 115, 22, 0.1);
+  border-color: var(--color-saffron);
+  color: var(--color-saffron-light);
+}
+
 /* Actions */
 .guide-form__actions {
   margin-top: var(--space-6);

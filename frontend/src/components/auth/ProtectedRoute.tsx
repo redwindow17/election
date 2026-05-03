@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { Spinner } from '../common/Spinner';
+import './LoginForm.css';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -17,12 +18,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '60vh',
-      }}>
+      <div className="protected-route__loading">
         <Spinner label="Checking authentication..." />
       </div>
     );

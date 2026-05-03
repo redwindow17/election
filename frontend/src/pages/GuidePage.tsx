@@ -41,8 +41,8 @@ export function GuidePage() {
           )}
 
           {error && (
-            <div className="guide-page__error glass-card">
-              <span className="guide-page__error-icon">⚠️</span>
+            <div className="guide-page__error glass-card" role="alert" aria-live="assertive">
+              <span className="guide-page__error-icon" aria-hidden="true">⚠️</span>
               <p>{error}</p>
               <button className="guide-page__error-retry" onClick={clearResult}>Try Again</button>
             </div>

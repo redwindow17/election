@@ -4,6 +4,8 @@
 
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
+import logger from '../../utils/logger';
+import './ErrorBoundary.css';
 
 interface Props {
   children: ReactNode;
@@ -23,7 +25,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught:', error, errorInfo);
+    logger.error('Unexpected render error', { error: error.message, componentStack: errorInfo.componentStack });
   }
 
   public render() {
@@ -31,35 +33,15 @@ export class ErrorBoundary extends Component<Props, State> {
       if (this.props.fallback) return this.props.fallback;
 
       return (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '50vh',
-          padding: '2rem',
-          textAlign: 'center',
-          gap: '1rem',
-        }}>
-          <div style={{ fontSize: '3rem' }}>⚠️</div>
-          <h2 style={{ color: 'var(--color-text)', fontSize: '1.5rem' }}>
-            Something went wrong
-          </h2>
-          <p style={{ color: 'var(--color-text-secondary)', maxWidth: '400px' }}>
+        <div className="error-boundary" role="alert">
+          <div className="error-boundary__icon" aria-hidden="true">⚠️</div>
+          <h2 className="error-boundary__title">Something went wrong</h2>
+          <p className="error-boundary__message">
             An unexpected error occurred. Please refresh the page and try again.
           </p>
           <button
+            className="error-boundary__btn"
             onClick={() => window.location.reload()}
-            style={{
-              padding: '0.75rem 1.5rem',
-              background: 'var(--color-primary-600)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.75rem',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              fontWeight: 600,
-            }}
           >
             Refresh Page
           </button>

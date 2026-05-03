@@ -102,7 +102,7 @@ export function HistoryPage() {
 
   if (error) {
     return (
-      <div className="history-page__error container">
+      <div className="history-page__error container" role="alert" aria-live="assertive">
         <div className="glass-card">
           <h2>Oops! Something went wrong.</h2>
           <p>{error}</p>
@@ -120,25 +120,25 @@ export function HistoryPage() {
       </div>
 
       {insights && (
-        <div className="history-page__insights" aria-label="Usage insights">
+        <dl className="history-page__insights" aria-label="Usage insights">
           <div className="history-page__metric">
-            <span>{insights.guideCreated}</span>
-            <strong>Guides</strong>
+            <dd>{insights.guideCreated}</dd>
+            <dt><strong>Guides</strong></dt>
           </div>
           <div className="history-page__metric">
-            <span>{insights.exportCreated}</span>
-            <strong>Exports</strong>
+            <dd>{insights.exportCreated}</dd>
+            <dt><strong>Exports</strong></dt>
           </div>
           <div className="history-page__metric">
-            <span>{insights.feedbackSubmitted}</span>
-            <strong>Feedback</strong>
+            <dd>{insights.feedbackSubmitted}</dd>
+            <dt><strong>Feedback</strong></dt>
           </div>
-        </div>
+        </dl>
       )}
 
       {history.length === 0 ? (
         <div className="history-page__empty glass-card">
-          <div className="history-page__empty-icon">Folder</div>
+          <div className="history-page__empty-icon" aria-hidden="true">📂</div>
           <h2>No history found</h2>
           <p>You haven't generated any election guides yet.</p>
         </div>

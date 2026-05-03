@@ -108,14 +108,18 @@ export async function saveConversation(
   return docRef.id;
 }
 
+/** Maximum number of conversations that can be fetched in a single history request */
+const MAX_HISTORY_LIMIT = 50;
+
 export async function getConversationHistory(
   userId: string,
   limit = 20
 ): Promise<ConversationHistoryRecord[]> {
   const db = getFirestore();
+  const safeLimit = Math.min(limit, MAX_HISTORY_LIMIT);
 
   if (!db) {
-    return getDemoUserConversations(userId).slice(0, limit);
+    return getDemoUserConversations(userId).slice(0, safeLimit);
   }
 
   const snapshot = await db
@@ -123,7 +127,7 @@ export async function getConversationHistory(
     .doc(userId)
     .collection(SUBCOLLECTION_CONVERSATIONS)
     .orderBy('createdAt', 'desc')
-    .limit(limit)
+    .limit(safeLimit)
     .get();
 
   return snapshot.docs.map((doc) => {

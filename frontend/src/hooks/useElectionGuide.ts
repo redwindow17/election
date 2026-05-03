@@ -64,9 +64,12 @@ export function useElectionGuide(): UseElectionGuideReturn {
       setError(null);
       const response = await measureAsync('generate_election_guide', () => fetchElectionGuide(input));
       setResult(response);
-    } catch {
+    } catch (err: unknown) {
+      // Show the fallback guide but also surface the error message so the user
+      // knows the result is a local preview rather than a live AI response.
+      const message = err instanceof Error ? err.message : 'Could not reach the server';
       setResult(createFallbackGuide(input));
-      setError(null);
+      setError(`Using offline preview — ${message}`);
     } finally {
       setLoading(false);
     }

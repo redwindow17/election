@@ -50,6 +50,7 @@ const envSchema = z.object({
   ALLOWED_ORIGINS: z.string().default('http://localhost:5173'),
 
   // Rate limiting
+  // Default: 50 requests per 15 minutes (900,000 ms) per IP
   RATE_LIMIT_WINDOW_MS: z.string().default('900000').transform(Number),
   RATE_LIMIT_MAX_REQUESTS: z.string().default('50').transform(Number),
 });

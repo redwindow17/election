@@ -154,6 +154,9 @@
   display: flex;
   gap: var(--space-2);
   flex-wrap: wrap;
+  border: none;
+  padding: 0;
+  margin: 0;
 }
 
 .guide-result__rating-btn {
@@ -164,6 +167,13 @@
   background: var(--color-surface);
   color: var(--color-text-secondary);
   font-weight: 700;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.guide-result__rating-btn:focus-visible {
+  outline: 2px solid var(--color-primary-400);
+  outline-offset: 2px;
 }
 
 .guide-result__rating-btn--active {

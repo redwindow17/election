@@ -8,6 +8,9 @@ import { ConversationHistoryRecord } from './firestoreService';
 import { hashIdentifier } from '../utils/hash';
 import logger from '../utils/logger';
 
+/** Number of hex characters to use from the user hash for storage path segmentation */
+const USER_HASH_PATH_LENGTH = 32;
+
 export interface ConversationExportResult {
   provider: 'cloud-storage' | 'inline-demo';
   conversationId: string;
@@ -74,7 +77,7 @@ export async function exportConversationToStorage(
 
   try {
     const storage = new Storage({ projectId: getProjectId() });
-    const userHash = hashIdentifier(userId, config.ANALYTICS_SALT).slice(0, 32);
+    const userHash = hashIdentifier(userId, config.ANALYTICS_SALT).slice(0, USER_HASH_PATH_LENGTH);
     const storagePath = `exports/${userHash}/${conversation.id}.json`;
     const bucket = storage.bucket(config.GCS_EXPORT_BUCKET!);
     const file = bucket.file(storagePath);

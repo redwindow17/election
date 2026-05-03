@@ -134,6 +134,7 @@ export function GuideForm({ onSubmit, loading }: GuideFormProps) {
             maxLength={500}
             aria-invalid={!!errors.question}
             aria-describedby={errors.question ? 'question-error' : undefined}
+            aria-required="true"
             required
           />
           <div className="guide-form__textarea-footer">
@@ -150,14 +151,15 @@ export function GuideForm({ onSubmit, loading }: GuideFormProps) {
 
         {/* Sample questions */}
         <div className="guide-form__samples">
-          <p className="guide-form__samples-label">💡 Try a sample question:</p>
-          <div className="guide-form__samples-grid">
+          <p className="guide-form__samples-label" id="sample-questions-label">💡 Try a sample question:</p>
+          <div className="guide-form__samples-grid" role="group" aria-labelledby="sample-questions-label">
             {SAMPLE_QUESTIONS.map((sample) => (
               <button
                 key={sample}
                 type="button"
                 className="guide-form__sample-chip"
                 onClick={() => handleSampleClick(sample)}
+                aria-label={`Use sample question: ${sample}`}
               >
                 {sample}
               </button>

@@ -144,3 +144,11 @@
     padding: var(--space-3) var(--space-5) var(--space-6);
   }
 }
+
+/* ── ProtectedRoute Loading ── */
+.protected-route__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}

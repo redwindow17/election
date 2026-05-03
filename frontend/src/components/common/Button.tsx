@@ -28,6 +28,7 @@ export function Button({
     <button
       className={`btn btn--${variant} btn--${size} ${fullWidth ? 'btn--full' : ''} ${loading ? 'btn--loading' : ''} ${className}`}
       disabled={disabled || loading}
+      aria-busy={loading || undefined}
       {...props}
     >
       {loading && (
@@ -37,7 +38,7 @@ export function Button({
           </svg>
         </span>
       )}
-      {icon && !loading && <span className="btn__icon">{icon}</span>}
+      {icon && !loading && <span className="btn__icon" aria-hidden="true">{icon}</span>}
       <span className="btn__text">{children}</span>
     </button>
   );
